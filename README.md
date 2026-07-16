@@ -19,5 +19,5 @@ Urdu OCR can be used to scan old Urdu books and newspapers and turn them into di
 
 **Result: 0 out of 5 images read correctly.**
 Tesseract fails on Urdu because Urdu uses a cursive Nastaliq script where letters connect and change shape depending on their position in a word — very different from the separated Latin letters Tesseract was mainly designed for. Urdu is also written right-to-left, adding another layer of complexity. In our test of 5 preprocessed images, Tesseract correctly read 0 out of 5 sentences, producing garbled symbols, random numbers, or mostly empty output instead of real Urdu words. This shows that off-the-shelf OCR tools are not reliable for Urdu text, which is exactly the gap our project aims to address by building a custom Urdu OCR model.
-
+**Confirmation:** My dataset has 69 images and loads correctly. Sample pixel_values shape: torch.Size([3, 384, 384]), Sample labels shape: torch.Size([128]). Training samples: 55, Testing samples: 14.
 

@@ -20,7 +20,7 @@ Rather than training a model from scratch, this project uses **fine-tuning**: st
 
 ## 3. Live Demo Link
 
-**[Try the live app here](https://urdu-ocr-codesaviours-si26-fatima-few8uhqbwx8w99hug2o4rb.streamlit.app/)**
+**[Try the live app here URL of streamlit](https://urdu-ocr-codesaviours-si26-fatima-few8uhqbwx8w99hug2o4rb.streamlit.app/)**
 
 *(Deployed on Streamlit Community Cloud — Hugging Face Spaces changed their free-tier policy this week, restricting new/free accounts from creating Gradio Spaces without a paid plan. Streamlit provides the same live, permanent, public functionality.)*
 

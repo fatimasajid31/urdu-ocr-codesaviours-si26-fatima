@@ -1,23 +1,75 @@
-Urdu OCR Project | Code Saviours SI-26 | Fatima Sajid
-**What is OCR (Optical Character Recognition)?**
-OCR is technology that reads text from images or photos and turns it into real text you can copy and edit. For example, when you scan a book page, OCR converts the picture into actual readable text instead of just an image.
 
-**Why is Urdu OCR harder than English OCR?**
-Urdu letters connect together in a cursive style and change shape depending on their position in a word, similar to joined handwriting. English letters, on the other hand, stay separate and keep the same shape. Urdu is also written right-to-left, and there is much less training data available for it compared to English.
+# Urdu OCR — A Fine-Tuned TrOCR Model for Extracting Text from Urdu Images
 
-**What are 2 real-world situations where Urdu OCR would be useful?**
-Urdu OCR can be used to scan old Urdu books and newspapers and turn them into digital, searchable text for archiving. It can also be used to read Urdu signboards or official documents automatically, which is helpful for translation apps or digitizing government paperwork.
-## Why We Need a Better Model
+## 1. What Problem This Solves and Why It Matters
 
-| Image | Actual Text | Tesseract Output | Correct? |
-|-------|------------|-------------------|----------|
-| urdu_1.png | اردو ایک خوبصورت زبان ہے | garbled dots/symbols | ❌ |
-| urdu_15.png | پانی زندگی کی نہایت ضروری ہے | "27" + random characters | ❌ |
-| urdu_6.png | سورج مشرق سے طلوع ہوتا ہے | single dot/mark | ❌ |
-| urdu_14.png | درخت لگانا ایک نیک عمل ہے | ".8" random symbols | ❌ |
-| urdu_16.png | اساتذہ کا احترام کرنا چاہیے | "xx" + scrambled characters | ❌ |
+Millions of documents, signboards, books, and newspapers across Pakistan and the wider Urdu-speaking world exist only as images or scans — with no easy way to search, copy, edit, or digitize the text inside them. Standard OCR tools like Tesseract are built for Latin scripts and struggle badly with Urdu's cursive, connected Nastaliq script, where letters change shape depending on their position in a word (much like joined handwriting). This project builds a custom Optical Character Recognition (OCR) system specifically trained to read Urdu text from real-world images — books, newspapers, signboards, and synthetic samples — turning pictures of Urdu text into actual readable, editable text.
 
-**Result: 0 out of 5 images read correctly.**
-Tesseract fails on Urdu because Urdu uses a cursive Nastaliq script where letters connect and change shape depending on their position in a word — very different from the separated Latin letters Tesseract was mainly designed for. Urdu is also written right-to-left, adding another layer of complexity. In our test of 5 preprocessed images, Tesseract correctly read 0 out of 5 sentences, producing garbled symbols, random numbers, or mostly empty output instead of real Urdu words. This shows that off-the-shelf OCR tools are not reliable for Urdu text, which is exactly the gap our project aims to address by building a custom Urdu OCR model.
-**Confirmation:** My dataset has 69 images and loads correctly. Sample pixel_values shape: torch.Size([3, 384, 384]), Sample labels shape: torch.Size([128]). Training samples: 55, Testing samples: 14.
+## 2. How It Works
 
+This project uses **TrOCR** (Transformer-based OCR), a deep learning model that combines a Vision Transformer (to "see" the image) with a language decoder (to "write out" the text it recognizes) — think of it as an AI that looks at a picture and reads it aloud, character by character.
+
+Rather than training a model from scratch, this project uses **fine-tuning**: starting with a TrOCR model already pretrained on general OCR tasks, then continuing its training specifically on a custom Urdu dataset. This teaches the model the distinct shapes, joins, and diacritics of Urdu script without needing millions of training examples.
+
+**Pipeline overview:**
+1. Collected and labeled 224+ Urdu text images across five categories (books, newspapers, signboards, synthetic, other)
+2. Preprocessed images (grayscale, resize, denoise, binarize) to standardize input quality
+3. Built a custom PyTorch `UrduOCRDataset` class with `TrOCRProcessor` to feed images and labels into the model
+4. Fine-tuned `Hammad712/troce-urdu-model2-v1` over 10 epochs
+5. Deployed the trained model behind a simple web interface (Gradio in Colab, then a permanent Streamlit app) so anyone can upload an image and get extracted Urdu text instantly
+
+## 3. Live Demo Link
+
+**[Try the live app here](https://urdu-ocr-codesaviours-si26-fatima-few8uhqbwx8w99hug2o4rb.streamlit.app/)**
+
+*(Deployed on Streamlit Community Cloud — Hugging Face Spaces changed their free-tier policy this week, restricting new/free accounts from creating Gradio Spaces without a paid plan. Streamlit provides the same live, permanent, public functionality.)*
+
+## 4. How to Run It Locally
+
+```bash
+# 1. Clone the repo
+git clone https://github.com/fatimasajid31/urdu-ocr-codesaviours-si26-fatima.git
+cd urdu-ocr-codesaviours-si26-fatima
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Run the app
+python app.py       # for the Gradio version
+# or
+streamlit run streamlit_app.py   # for the Streamlit version
+```
+
+The app will download the fine-tuned model automatically on first run and open a local web interface where you can upload a Urdu image and see the extracted text.
+
+## 5. Dataset Details
+
+- **Total images:** 224+ labeled samples
+- **Categories:** Books, newspapers, signboards, synthetic text images, and other miscellaneous sources
+- **Fonts used (synthetic images):** Noto Nastaliq Urdu and Noto Naskh Arabic
+- **Labeling:** Each image paired with its ground-truth Urdu text in a `labels.csv` file
+- **Variety:** Mix of real-world photographs (varying lighting, backgrounds, font styles) and computer-generated text to broaden the model's exposure to different visual styles of Urdu script
+
+## 6. Results
+
+After fine-tuning for 10 epochs:
+- **Training Character Error Rate (CER):** ~10.2%
+- **Training loss:** Dropped significantly across epochs, showing the model was successfully learning Urdu character patterns
+- **Exact-match test accuracy:** 0%
+
+**Why exact-match accuracy was 0% despite a low CER:** the CER measures how close the predicted text is character-by-character, and at ~10.2% the model is getting most characters right. However, "exact match" requires the *entire* predicted string to be character-for-character identical to the ground truth — a single extra space, dropped character, or generation-length mismatch fails the whole example. This points to a **generation length/decoding issue** (the model likely wasn't generating sequences of the correct length), rather than the model failing to learn Urdu script itself.
+
+**What I'd do differently with more time:**
+- Tune `max_length` and `num_beams` in the model's `.generate()` call to better match expected output lengths
+- Add more diverse training examples, especially longer text sequences
+- Use a validation-based early stopping strategy to prevent overfitting on the (currently limited) training set
+- Explore length-normalized decoding strategies to fix the exact-match generation problem specifically
+**Screenshots**
+- <img width="822" height="341" alt="image" src="https://github.com/user-attachments/assets/849656a6-7fd6-4d8c-a7cd-df204cb233ac" />
+<img width="895" height="819" alt="image (1)" src="https://github.com/user-attachments/assets/74b490e3-2633-4ae9-9202-6f31200b4358" />
+
+
+## 7. Credit
+Built during the **Code Saviours ML/AI Internship — Batch SI-26**
+**Fatima Sajid** | Roll No. 2023-BS-CS-197 | University of Faisalabad.
+GitHub: [fatimasajid31](https://github.com/fatimasajid31)

@@ -65,7 +65,10 @@ After fine-tuning for 10 epochs:
 - Use a validation-based early stopping strategy to prevent overfitting on the (currently limited) training set
 - Explore length-normalized decoding strategies to fix the exact-match generation problem specifically
 **Screenshots**
+  <img width="1176" height="344" alt="image" src="https://github.com/user-attachments/assets/39d9677d-17ef-463c-bc37-1c59b459bf79" />
+  Result of step 1.
 - <img width="822" height="341" alt="image" src="https://github.com/user-attachments/assets/849656a6-7fd6-4d8c-a7cd-df204cb233ac" />
+deployment step on streamlit because gradio is paid.
 <img width="895" height="819" alt="image (1)" src="https://github.com/user-attachments/assets/74b490e3-2633-4ae9-9202-6f31200b4358" />
 
 
